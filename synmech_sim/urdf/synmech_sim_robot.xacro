@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<robot name="synmech_mobot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find synmech_description)/urdf/robot_core.xacro" />
+
+    <xacro:include filename="$(find synmech_sim)/urdf/gazebo_controller.xacro" />
+
+</robot>

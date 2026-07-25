@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="simple_house_world">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+
+    <model name="outer_wall_north">
+      <static>true</static>
+      <link name="link"><pose>0 5 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>10 0.2 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>10 0.2 1</size></box></geometry></visual>
+      </link>
+    </model>
+    <model name="outer_wall_south">
+      <static>true</static>
+      <link name="link"><pose>0 -5 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>10 0.2 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>10 0.2 1</size></box></geometry></visual>
+      </link>
+    </model>
+    <model name="outer_wall_east">
+      <static>true</static>
+      <link name="link"><pose>5 0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.2 10 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 10 1</size></box></geometry></visual>
+      </link>
+    </model>
+    <model name="outer_wall_west">
+      <static>true</static>
+      <link name="link"><pose>-5 0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.2 10 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 10 1</size></box></geometry></visual>
+      </link>
+    </model>
+
+    <model name="inner_wall_1">
+      <static>true</static>
+      <link name="link"><pose>-1.5 2 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>7 0.2 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>7 0.2 1</size></box></geometry></visual>
+      </link>
+    </model>
+    <model name="inner_wall_2">
+      <static>true</static>
+      <link name="link"><pose>1.5 -2 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>7 0.2 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>7 0.2 1</size></box></geometry></visual>
+      </link>
+    </model>
+    <model name="inner_wall_3">
+      <static>true</static>
+      <link name="link"><pose>2 1.5 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.2 4 1</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 4 1</size></box></geometry></visual>
+      </link>
+    </model>
+  </world>
+</sdf>

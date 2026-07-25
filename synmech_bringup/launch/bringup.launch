@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">
+        <param name="port" value="/dev/ttyUSB0" />
+        <param name="baudrate" value="115200" />
+        <param name="vel_to_pwm" value="200.0" />
+        <param name="track_width" value="0.16" />
+    </node>
+    <!-- Các node Lidar, Camera hoặc robot_state_publisher sẽ viết tiếp ở đây -->
+</launch>

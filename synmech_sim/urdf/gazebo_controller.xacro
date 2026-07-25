@@ -1,0 +1,102 @@
+<?xml version = "1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <gazebo reference="chasis_link">
+        <material>Gazebo/Grass</material>
+    </gazebo>
+
+    <gazebo reference="laser_frame">
+        <material>Gazebo/SteelBlue</material>
+        <sensor type="ray" name="rplidar_sensor">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>true</visualize>
+            <update_rate>10</update_rate>
+            <ray>
+                <scan>
+                <horizontal>
+                    <samples>360</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-3.1415926</min_angle>
+                    <max_angle>3.1415926</max_angle>
+                </horizontal>
+                </scan>
+                <range>
+                <min>0.15</min>
+                <max>12.0</max>
+                <resolution>0.01</resolution>
+                </range>
+            </ray>
+
+            <plugin name="synmech_rplidar_a1m8" filename="libgazebo_ros_laser.so">
+                <topicName>/scan</topicName>
+                <frameName>laser_frame</frameName>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+    <gazebo reference="left_wheel_link">
+        <material>Gazebo/Ivory</material>
+        <mu1>1.5</mu1>
+        <mu2>1.5</mu2>
+        <kp>1000000.0</kp> <kd>1.0</kd>
+    </gazebo>
+
+    <gazebo reference="right_wheel_link">
+        <material>Gazebo/Ivory</material>
+        <mu1>1.5</mu1>
+        <mu2>1.5</mu2>
+        <kp>1000000.0</kp>
+        <kd>1.0</kd>
+    </gazebo>
+
+    <gazebo reference="caster1_link">
+        <material>Gazebo/Sand</material>
+        <mu1>0.0001</mu1>
+        <mu2>0.0001</mu2>
+    </gazebo>
+
+    <gazebo reference="caster2_link">
+        <material>Gazebo/Sand</material>
+        <mu1>0.0001</mu1>
+        <mu2>0.0001</mu2>
+    </gazebo>
+
+    <gazebo reference="caster3_link">
+        <material>Gazebo/Sand</material>
+        <mu1>0.0001</mu1>
+        <mu2>0.0001</mu2>
+    </gazebo>
+
+    <gazebo reference="caster4_link">
+        <material>Gazebo/Sand</material>
+        <mu1>0.0001</mu1>
+        <mu2>0.0001</mu2>
+    </gazebo>
+    
+    <gazebo>
+        <plugin name="bodieukhien_visai" filename="libgazebo_ros_diff_drive.so">
+            <!-- Wheel Information -->
+            <leftJoint>left_wheel_base</leftJoint>
+            <rightJoint>right_wheel_base</rightJoint>
+            <wheelSeparation>0.168</wheelSeparation>
+
+            <!-- Limitations -->
+            <updateRate>100</updateRate>
+            <wheelDiameter>0.043</wheelDiameter>
+            <wheelAcceleration>1.0</wheelAcceleration>
+            <wheelTorque>20</wheelTorque>
+
+            <!-- Input -->
+            <commandTopic>synmech_mobot/cmd_vel</commandTopic>
+            <!-- Outputs -->
+            <odometryTopic>synmech_mobot/odom</odometryTopic>
+
+            <!-- Reference System -->
+            <odometryFrame>odom</odometryFrame>
+            <robotBaseFrame>base_footprint</robotBaseFrame>
+
+            <!-- Coordinate Transmittance -->
+            <publishWheelTF>true</publishWheelTF>
+            <publishOdomTF>true</publishOdomTF>
+        </plugin>
+    </gazebo>
+</robot>
