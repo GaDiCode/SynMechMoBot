@@ -17,7 +17,7 @@ x-common: &common
   network_mode: host
   privileged: true
   environment:
-    - ROS_MASTER_URI=http://192.168.0.99:11311
+    - ROS_MASTER_URI=http://192.168.0.99:2710
     - ROS_IP=192.168.0.99
   volumes:
     # Mount source code → sửa code ngoài, container thấy ngay

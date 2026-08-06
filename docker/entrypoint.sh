@@ -18,7 +18,7 @@ fi
 source /catkin_ws/devel/setup.bash
 
 # Set ROS network (đọc từ biến môi trường)
-export ROS_MASTER_URI=${ROS_MASTER_URI:-http://192.168.0.99:11311}
+export ROS_MASTER_URI=${ROS_MASTER_URI:-http://192.168.0.99:2710}
 export ROS_IP=${ROS_IP:-192.168.0.99}
 
 echo "============================================"
