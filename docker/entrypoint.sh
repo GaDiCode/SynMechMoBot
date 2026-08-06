@@ -9,7 +9,8 @@ source /opt/ros/noetic/setup.bash
 if [ ! -f /catkin_ws/devel/setup.bash ]; then
     echo "[synmech] Lần đầu chạy — đang build catkin workspace..."
     cd /catkin_ws
-    catkin_make
+    # Chỉ build các package cần thiết cho OPi (bỏ qua sim và nav để tránh lỗi thiếu thư viện Gazebo/MoveBase)
+    catkin_make -DCATKIN_BLACKLIST_PACKAGES="synmech_sim;synmech_navigation"
     echo "[synmech] Build xong!"
 fi
 
