@@ -15,6 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-tf \
     ros-noetic-nav-msgs \
     ros-noetic-geometry-msgs \
+    ros-noetic-move-base \
+    ros-noetic-amcl \
+    ros-noetic-map-server \
+    ros-noetic-gmapping \
+    ros-noetic-teleop-twist-keyboard \
     # Python3 cho base_controller
     python3-serial \
     python3-pip \
