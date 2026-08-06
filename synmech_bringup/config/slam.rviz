@@ -5,12 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Status1
         - /RobotModel1
-        - /RobotModel1/Status1
         - /TF1
         - /LaserScan1
-        - /LaserScan1/Status1
+        - /Map1
+        - /Odometry1
       Splitter Ratio: 0.5
     Tree Height: 433
   - Class: rviz/Views
@@ -43,6 +42,7 @@ Visualization Manager:
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
+
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -107,6 +107,7 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+
     - Class: rviz/TF
       Enabled: true
       Filter (blacklist): ""
@@ -130,6 +131,14 @@ Visualization Manager:
           Value: true
         laser_frame:
           Value: true
+        left_wheel_link:
+          Value: true
+        right_wheel_link:
+          Value: true
+        odom:
+          Value: true
+        map:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 0.30000001192092896
       Name: TF
@@ -137,22 +146,29 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        base_footprint:
-          base_link:
-            caster1_link:
-              {}
-            caster2_link:
-              {}
-            caster3_link:
-              {}
-            caster4_link:
-              {}
-            chasis_link:
-              {}
-            laser_frame:
-              {}
+        map:
+          odom:
+            base_footprint:
+              base_link:
+                caster1_link:
+                  {}
+                caster2_link:
+                  {}
+                caster3_link:
+                  {}
+                caster4_link:
+                  {}
+                chasis_link:
+                  {}
+                laser_frame:
+                  {}
+                left_wheel_link:
+                  {}
+                right_wheel_link:
+                  {}
       Update Interval: 0
       Value: true
+
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -181,36 +197,18 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
-      Draw Behind: false
+      Draw Behind: true
       Enabled: true
       Name: Map
       Topic: /map
       Unreliable: false
       Use Timestamp: false
       Value: true
-    - Alpha: 0.5
-      Class: rviz/Map
-      Color Scheme: costmap
-      Draw Behind: true
-      Enabled: false
-      Name: Global Costmap
-      Topic: /move_base/global_costmap/costmap
-      Unreliable: false
-      Use Timestamp: false
-      Value: false
-    - Alpha: 0.5
-      Class: rviz/Map
-      Color Scheme: costmap
-      Draw Behind: false
-      Enabled: false
-      Name: Local Costmap
-      Topic: /move_base/local_costmap/costmap
-      Unreliable: false
-      Use Timestamp: false
-      Value: false
+
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
       Covariance:
@@ -246,59 +244,12 @@ Visualization Manager:
       Topic: /odom
       Unreliable: false
       Value: true
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 0; 255; 0
-      Enabled: true
-      Head Diameter: 0.30000001192092896
-      Head Length: 0.20000000298023224
-      Length: 0.30000001192092896
-      Line Style: Lines
-      Line Width: 0.029999999329447746
-      Name: Global Plan
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Queue Size: 10
-      Radius: 0.029999999329447746
-      Shaft Diameter: 0.10000000149011612
-      Shaft Length: 0.10000000149011612
-      Topic: /move_base/NavfnROS/plan
-      Unreliable: false
-      Value: true
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 0; 85; 255
-      Enabled: true
-      Head Diameter: 0.30000001192092896
-      Head Length: 0.20000000298023224
-      Length: 0.30000001192092896
-      Line Style: Lines
-      Line Width: 0.029999999329447746
-      Name: Local Plan
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Queue Size: 10
-      Radius: 0.029999999329447746
-      Shaft Diameter: 0.10000000149011612
-      Shaft Length: 0.10000000149011612
-      Topic: /move_base/TrajectoryPlannerROS/local_plan
-      Unreliable: false
-      Value: true
+
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: odom
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -315,26 +266,19 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 1.043652892112732
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6650005578994751
+      Scale: 50
       Target Frame: <Fixed Frame>
-      Yaw: 0.3000001013278961
+      X: 0
+      Y: 0
     Saved: ~
 Window Geometry:
   Displays:
@@ -342,9 +286,6 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000156000003a2fc0200000002fb000000100044006900730070006c006100790073010000003b00000232000000c700fffffffb0000000a0056006900650077007301000002730000016a000000a000ffffff000005de000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Views:
-    collapsed: false
   Width: 1850
   X: 70
   Y: 27

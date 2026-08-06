@@ -1,15 +1,10 @@
 <launch>
-    <!-- ============================================
-         BRINGUP TỔNG — CHẠY TRÊN ORANGE PI (Docker)
-         Gom tất cả node cần thiết cho xe thật.
-         ============================================ -->
 
-    <!-- Robot Description (cho robot_state_publisher tạo TF tree) -->
+    <!-- Robot Description -->
     <param name="robot_description"
            command="$(find xacro)/xacro '$(find synmech_description)/urdf/robot.urdf.xacro'"/>
 
-    <!-- Robot State Publisher: phát TF tree từ URDF
-         base_footprint → base_link → wheels, laser_frame -->
+    <!-- Robot State Publisher-->
     <node pkg="robot_state_publisher" type="robot_state_publisher"
           name="robot_state_publisher" output="screen">
         <param name="publish_frequency" value="50.0"/>
@@ -24,7 +19,16 @@
         <param name="angle_compensate" value="true"/>
     </node>
 
-    <!-- ====== BASE CONTROLLER (STM32 UART) ======
+    <!-- ====== FAKE ODOMETRY (Phase 1 — Không cần STM32) ======
+         Phát TF odom→base_footprint + /joint_states để fix lỗi TF tree.
+         Tích phân /cmd_vel để ước lượng vị trí (dead reckoning).
+         *** Xóa/comment node này khi chuyển sang base_controller.py (Phase 2+) *** -->
+    <node pkg="synmech_bringup" type="fake_odom.py" name="fake_odom" output="screen">
+        <param name="track_width"  value="0.168"/>
+        <param name="wheel_radius" value="0.0215"/>
+    </node>
+
+    <!-- ====== BASE CONTROLLER (STM32 UART — Phase 2+) ======
          Bỏ comment khi cắm STM32 vào OPi.
          Đổi port thành /dev/stm32 sau khi cài udev rule.
     <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">

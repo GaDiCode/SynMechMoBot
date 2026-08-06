@@ -8,8 +8,6 @@
 #   docker-compose run shell    ← Mở terminal trong container
 # ============================================
 
-version: "3.8"
-
 x-common: &common
   build:
     context: ..

@@ -1,0 +1,61 @@
+<launch>
+    <!-- Bringup tổng: URDF + robot_state_publisher + Lidar + fake_odom -->
+    <include file="$(find synmech_bringup)/launch/bringup.launch" />
+
+    <!-- Gmapping SLAM: Nhận /scan + /odom → Vẽ /map -->
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+        <!-- Frame references -->
+        <param name="base_frame"  value="base_footprint"/>
+        <param name="odom_frame"  value="odom"/>
+        <param name="map_frame"   value="map"/>
+
+        <!-- Tần suất cập nhật bản đồ -->
+        <param name="map_update_interval" value="2.0"/>
+
+        <!-- Điều kiện để Gmapping cập nhật:
+             Robot phải di chuyển ít nhất 0.1m HOẶC quay 0.1 rad
+             mới kích hoạt scan matching. Giá trị nhỏ = cập nhật thường xuyên hơn -->
+        <param name="linearUpdate"   value="0.1"/>
+        <param name="angularUpdate"  value="0.1"/>
+
+        <!-- Tầm quét Lidar -->
+        <param name="maxUrange" value="6.0"/>
+        <param name="maxRange"  value="8.0"/>
+
+        <!-- Thông số scan matching (dùng giá trị mặc định ổn định) -->
+        <param name="sigma"       value="0.05"/>
+        <param name="kernelSize"  value="1"/>
+        <param name="lstep"       value="0.05"/>
+        <param name="astep"       value="0.05"/>
+        <param name="iterations"  value="5"/>
+        <param name="lsigma"      value="0.075"/>
+        <param name="ogain"       value="3.0"/>
+        <param name="lskip"       value="0"/>
+
+        <!-- minimumScore: Ngưỡng tối thiểu để chấp nhận scan matching.
+             Giá trị thấp (50) = dễ chấp nhận, tốt cho Phase 1 với odom giả.
+             Tăng lên 200-400 khi có odom thật (Phase 2+) để bản đồ chính xác hơn -->
+        <param name="minimumScore" value="50"/>
+
+        <!-- Particle filter -->
+        <param name="srr" value="0.01"/>
+        <param name="srt" value="0.02"/>
+        <param name="str" value="0.01"/>
+        <param name="stt" value="0.02"/>
+        <param name="resampleThreshold" value="0.5"/>
+        <param name="particles"  value="30"/>
+
+        <!-- Kích thước bản đồ (20m x 20m, đủ cho 1 phòng/tầng nhà) -->
+        <param name="delta" value="0.05"/>
+        <param name="xmin" value="-10.0"/>
+        <param name="ymin" value="-10.0"/>
+        <param name="xmax" value="10.0"/>
+        <param name="ymax" value="10.0"/>
+
+        <!-- Cấu hình sampling (giá trị nhỏ = chính xác hơn nhưng chậm hơn) -->
+        <param name="llsamplerange"  value="0.01"/>
+        <param name="llsamplestep"   value="0.01"/>
+        <param name="lasamplerange"  value="0.005"/>
+        <param name="lasamplestep"   value="0.005"/>
+    </node>
+</launch>
