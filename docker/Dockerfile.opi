@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-noetic-map-server \
     ros-noetic-gmapping \
     ros-noetic-teleop-twist-keyboard \
+    ros-noetic-rplidar-ros \
     # Python3 cho base_controller
     python3-serial \
     python3-pip \
