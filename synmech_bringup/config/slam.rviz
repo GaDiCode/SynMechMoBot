@@ -5,13 +5,13 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Status1
         - /RobotModel1
-        - /TF1
-        - /LaserScan1
         - /Map1
+        - /Map1/Status1
         - /Odometry1
       Splitter Ratio: 0.5
-    Tree Height: 433
+    Tree Height: 434
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -42,7 +42,6 @@ Visualization Manager:
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
-
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -107,7 +106,6 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
-
     - Class: rviz/TF
       Enabled: true
       Filter (blacklist): ""
@@ -133,11 +131,9 @@ Visualization Manager:
           Value: true
         left_wheel_link:
           Value: true
-        right_wheel_link:
-          Value: true
         odom:
           Value: true
-        map:
+        right_wheel_link:
           Value: true
       Marker Alpha: 1
       Marker Scale: 0.30000001192092896
@@ -146,29 +142,27 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_footprint:
-              base_link:
-                caster1_link:
-                  {}
-                caster2_link:
-                  {}
-                caster3_link:
-                  {}
-                caster4_link:
-                  {}
-                chasis_link:
-                  {}
-                laser_frame:
-                  {}
-                left_wheel_link:
-                  {}
-                right_wheel_link:
-                  {}
+        odom:
+          base_footprint:
+            base_link:
+              caster1_link:
+                {}
+              caster2_link:
+                {}
+              caster3_link:
+                {}
+              caster4_link:
+                {}
+              chasis_link:
+                {}
+              laser_frame:
+                {}
+              left_wheel_link:
+                {}
+              right_wheel_link:
+                {}
       Update Interval: 0
       Value: true
-
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -197,7 +191,6 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -208,7 +201,6 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
-
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
       Covariance:
@@ -244,12 +236,11 @@ Visualization Manager:
       Topic: /odom
       Unreliable: false
       Value: true
-
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -266,6 +257,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
+      Angle: -0.5250000357627869
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -275,7 +267,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 50
+      Scale: 245.25392150878906
       Target Frame: <Fixed Frame>
       X: 0
       Y: 0
@@ -286,6 +278,9 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd000000010000000000000156000003a2fc0200000002fb000000100044006900730070006c006100790073010000003b00000233000000c700fffffffb0000000a00560069006500770073010000027400000169000000a000ffffff000005de000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Views:
+    collapsed: false
   Width: 1850
   X: 70
   Y: 27

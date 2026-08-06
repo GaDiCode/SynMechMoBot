@@ -1,16 +1,23 @@
 <launch>
+    <!-- SLAM VIEW - RUNS ON LAPTOP
+         Connects to ROS Master on Orange Pi to:
+         1. Visualize the building map (Gmapping /map)
+         2. Display Lidar scan, TF tree, and Odometry
+         3. Control the robot remotely via keyboard (teleop)
+    -->
+
     <arg name="rviz_config" default="$(find synmech_bringup)/config/slam.rviz"/>
 
-    <!-- RViz — Hiển thị robot, Lidar, bản đồ SLAM -->
+    <!-- RViz - Displays robot model, Lidar data, and SLAM map -->
     <node pkg="rviz" type="rviz" name="rviz"
           args="-d $(arg rviz_config)" output="screen"/>
 
-    <!-- Teleop Keyboard — Lái xe từ xa bằng bàn phím
-         Mở trong terminal riêng (xterm) để nhận phím bấm -->
+    <!-- Teleop Keyboard - Remote control via keyboard
+         Opens in a separate terminal window (xterm) to capture keypresses -->
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"
           name="teleop" output="screen"
           launch-prefix="xterm -e">
-        <!-- Giảm tốc độ mặc định cho robot nhỏ -->
+        <!-- Reduce default speed for safer mapping in small environments -->
         <param name="speed"      value="0.10"/>
         <param name="turn"       value="0.4"/>
     </node>

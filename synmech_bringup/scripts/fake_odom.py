@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-fake_odom.py — Fake Odometry Node cho Phase 1 (Không cần STM32/Encoder)
+fake_odom.py - Fake Odometry Node for Phase 1 (No STM32/Encoder required)
 
-CHỨC NĂNG:
-  1. Phát TF: odom → base_footprint (để Gmapping biết xe đang ở đâu)
-  2. Phát topic /odom (nav_msgs/Odometry)
-  3. Phát topic /joint_states cho 2 bánh xe (fix lỗi TF tree)
-  4. Lắng nghe /cmd_vel → tích phân tính vị trí giả (dead reckoning)
+FEATURES:
+  1. Publishes TF: odom -> base_footprint (provides localization for Gmapping)
+  2. Publishes topic /odom (nav_msgs/Odometry)
+  3. Publishes topic /joint_states for 2 wheels (resolves TF tree error)
+  4. Subscribes to /cmd_vel -> integrates to estimate fake position (dead reckoning)
 
-CÁCH DÙNG:
-  - Phase 1: Bê xe bằng tay, Gmapping dùng scan matching để vẽ bản đồ.
-             Odometry giả sẽ báo "xe đứng yên" (vì không ai gửi /cmd_vel),
-             nhưng Gmapping vẫn vẽ được nhờ so sánh 2 bản quét lidar liên tiếp.
-  - Nếu bạn chạy teleop trên Laptop, fake_odom sẽ tích phân /cmd_vel
-    để ước lượng vị trí (open-loop, có sai số nhưng đủ để test).
+USAGE:
+  - Phase 1: Manually move the robot. Gmapping relies on scan matching to build the map.
+             Fake odometry will report "robot stationary" (no /cmd_vel input),
+             but Gmapping can still map by matching consecutive Lidar scans.
+  - If using a teleop node on the Laptop, fake_odom integrates /cmd_vel
+    to estimate position (open-loop, contains drift but sufficient for initial testing).
 
-THAY THẾ BỞI:
-  - base_controller.py khi có STM32 + MPU6050 (Phase 2+)
+DEPRECATION:
+  - Replace with base_controller.py once STM32 + MPU6050 are integrated (Phase 2+)
 """
 
 import rospy
@@ -31,21 +31,21 @@ class FakeOdom:
     def __init__(self):
         rospy.init_node('fake_odom', anonymous=False)
 
-        # ====== THÔNG SỐ CƠ KHÍ (Lấy từ URDF robot_core.xacro) ======
-        self.track_width = rospy.get_param('~track_width', 0.168)      # Khoảng cách 2 bánh (m)
-        self.wheel_radius = rospy.get_param('~wheel_radius', 0.0215)   # Bán kính bánh xe (m)
+        # ====== MECHANICAL PARAMETERS (Loaded from URDF robot_core.xacro) ======
+        self.track_width = rospy.get_param('~track_width', 0.168)      # Distance between wheels (m)
+        self.wheel_radius = rospy.get_param('~wheel_radius', 0.0215)   # Wheel radius (m)
 
-        # ====== BIẾN TRẠNG THÁI ODOMETRY ======
-        self.x = 0.0          # Vị trí X (m) trong hệ tọa độ odom
-        self.y = 0.0          # Vị trí Y (m)
-        self.theta = 0.0      # Góc quay (rad)
-        self.vx = 0.0         # Vận tốc tuyến tính hiện tại (m/s)
-        self.vth = 0.0        # Vận tốc góc hiện tại (rad/s)
+        # ====== ODOMETRY STATE VARIABLES ======
+        self.x = 0.0          # X position (m) in odom frame
+        self.y = 0.0          # Y position (m)
+        self.theta = 0.0      # Orientation (rad)
+        self.vx = 0.0         # Current linear velocity (m/s)
+        self.vth = 0.0        # Current angular velocity (rad/s)
         self.last_time = rospy.Time.now()
 
-        # Biến tính góc quay bánh xe (cho joint_states)
-        self.left_wheel_pos = 0.0    # Góc quay tích lũy bánh trái (rad)
-        self.right_wheel_pos = 0.0   # Góc quay tích lũy bánh phải (rad)
+        # Variables to compute wheel rotation angles (for joint_states)
+        self.left_wheel_pos = 0.0    # Accumulated left wheel angle (rad)
+        self.right_wheel_pos = 0.0   # Accumulated right wheel angle (rad)
 
         # ====== ROS PUBLISHERS ======
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
@@ -55,26 +55,26 @@ class FakeOdom:
         # ====== ROS SUBSCRIBER ======
         rospy.Subscriber('/cmd_vel', Twist, self.cmd_vel_callback)
 
-        rospy.loginfo("[fake_odom] Node khởi động thành công!")
+        rospy.loginfo("[fake_odom] Node initialized successfully.")
         rospy.loginfo("[fake_odom] Track width: %.3f m | Wheel radius: %.4f m",
                       self.track_width, self.wheel_radius)
-        rospy.loginfo("[fake_odom] Đang phát TF odom→base_footprint + /joint_states")
+        rospy.loginfo("[fake_odom] Broadcasting TF odom->base_footprint and publishing /joint_states.")
 
     def cmd_vel_callback(self, msg):
-        """Nhận lệnh vận tốc từ teleop keyboard"""
+        """Receive velocity commands from teleop"""
         self.vx = msg.linear.x
         self.vth = msg.angular.z
 
     def update(self):
-        """Tính toán odometry và phát TF + topics mỗi chu kỳ"""
+        """Compute odometry and broadcast TF + topics periodically"""
         current_time = rospy.Time.now()
         dt = (current_time - self.last_time).to_sec()
 
         if dt <= 0:
             return
 
-        # ====== TÍCH PHÂN VỊ TRÍ (Dead Reckoning) ======
-        # Đây là phép tính "open-loop": giả sử xe chạy đúng theo lệnh cmd_vel
+        # ====== POSITION INTEGRATION (Dead Reckoning) ======
+        # This is an open-loop calculation: assumes the robot moves exactly as commanded
         delta_x = self.vx * math.cos(self.theta) * dt
         delta_y = self.vx * math.sin(self.theta) * dt
         delta_theta = self.vth * dt
@@ -83,20 +83,20 @@ class FakeOdom:
         self.y += delta_y
         self.theta += delta_theta
 
-        # ====== TÍNH GÓC QUAY BÁNH XE (cho joint_states) ======
-        # Inverse kinematics: từ vận tốc xe → vận tốc từng bánh
+        # ====== COMPUTE WHEEL ROTATION ANGLES (for joint_states) ======
+        # Inverse kinematics: robot velocity -> individual wheel velocities
         v_left = self.vx - (self.vth * self.track_width / 2.0)
         v_right = self.vx + (self.vth * self.track_width / 2.0)
 
-        # Vận tốc góc bánh = vận tốc tuyến tính / bán kính
+        # Angular velocity of wheel = linear velocity / radius
         omega_left = v_left / self.wheel_radius
         omega_right = v_right / self.wheel_radius
 
-        # Tích lũy góc quay
+        # Accumulate rotation angle
         self.left_wheel_pos += omega_left * dt
         self.right_wheel_pos += omega_right * dt
 
-        # ====== PHÁT TF: odom → base_footprint ======
+        # ====== BROADCAST TF: odom -> base_footprint ======
         odom_quat = tf.transformations.quaternion_from_euler(0, 0, self.theta)
 
         self.tf_broadcaster.sendTransform(
@@ -107,7 +107,7 @@ class FakeOdom:
             "odom"               # parent frame
         )
 
-        # ====== PHÁT TOPIC /odom ======
+        # ====== PUBLISH TOPIC /odom ======
         odom = Odometry()
         odom.header.stamp = current_time
         odom.header.frame_id = "odom"
@@ -123,7 +123,7 @@ class FakeOdom:
 
         self.odom_pub.publish(odom)
 
-        # ====== PHÁT TOPIC /joint_states (Fix lỗi TF bánh xe) ======
+        # ====== PUBLISH TOPIC /joint_states (Resolves wheel TF errors) ======
         js = JointState()
         js.header.stamp = current_time
         js.name = ['left_wheel_base', 'right_wheel_base']
@@ -136,7 +136,7 @@ class FakeOdom:
         self.last_time = current_time
 
     def run(self):
-        """Vòng lặp chính — chạy ở 50Hz"""
+        """Main loop - runs at 50Hz"""
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             self.update()

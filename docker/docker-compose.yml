@@ -42,8 +42,8 @@ services:
     command: >
       bash -c "
         sleep 3 &&
-        echo '[synmech] Launching bringup...' &&
-        roslaunch synmech_bringup bringup.launch
+        echo '[synmech] Launching SLAM (bringup + gmapping)...' &&
+        roslaunch synmech_bringup slam.launch
       "
 
   # ====== SHELL — Mở terminal để debug ======
