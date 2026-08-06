@@ -86,9 +86,9 @@
             <wheelTorque>20</wheelTorque>
 
             <!-- Input -->
-            <commandTopic>synmech_mobot/cmd_vel</commandTopic>
+            <commandTopic>cmd_vel</commandTopic>
             <!-- Outputs -->
-            <odometryTopic>synmech_mobot/odom</odometryTopic>
+            <odometryTopic>odom</odometryTopic>
 
             <!-- Reference System -->
             <odometryFrame>odom</odometryFrame>
@@ -97,6 +97,7 @@
             <!-- Coordinate Transmittance -->
             <publishWheelTF>true</publishWheelTF>
             <publishOdomTF>true</publishOdomTF>
+            <publishWheelJointState>true</publishWheelJointState>
         </plugin>
     </gazebo>
 </robot>

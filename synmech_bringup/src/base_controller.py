@@ -17,7 +17,7 @@ class SynmechBaseController:
         self.baud_rate = rospy.get_param('~baudrate', 115200)
         
         # Khoảng cách giữa 2 bánh xe (Track width) - Đơn vị: mét
-        self.L = rospy.get_param('~track_width', 0.16) 
+        self.L = rospy.get_param('~track_width', 0.168) 
         
         # Hệ số quy đổi (Mapping) từ m/s sang PWM (0-255). 
         # Cần tinh chỉnh (Tune) con số này khi chạy thực tế ngoài đời.
@@ -124,12 +124,12 @@ class SynmechBaseController:
         # Ép kiểu Quaternion (Toán học hình học không gian)
         odom_quat = tf.transformations.quaternion_from_euler(0, 0, self.theta)
 
-        # 1. BẮN TF BẢN ĐỒ (odom -> base_link)
+        # 1. BẮN TF BẢN ĐỒ (odom -> base_footprint)
         self.tf_broadcaster.sendTransform(
             (self.x, self.y, 0.0),
             odom_quat,
             current_time,
-            "base_link",
+            "base_footprint",
             "odom"
         )
 
@@ -137,7 +137,7 @@ class SynmechBaseController:
         odom = Odometry()
         odom.header.stamp = current_time
         odom.header.frame_id = "odom"
-        odom.child_frame_id = "base_link"
+        odom.child_frame_id = "base_footprint"
 
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
@@ -145,7 +145,7 @@ class SynmechBaseController:
         odom.pose.pose.orientation = Quaternion(*odom_quat)
 
         odom.twist.twist.linear.x = v_robot
-        odom.twist.twist.angular.z = v_robot # Nếu cần w thực tế có thể tính (v_r - v_l) / L
+        odom.twist.twist.angular.z = (v_r - v_l) / self.L
 
         self.odom_pub.publish(odom)
 

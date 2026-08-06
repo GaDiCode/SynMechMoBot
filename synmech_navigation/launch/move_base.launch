@@ -8,9 +8,6 @@
         <rosparam file="$(find synmech_navigation)/config/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find synmech_navigation)/config/global_costmap_params.yaml" command="load" />
         <rosparam file="$(find synmech_navigation)/config/base_local_planner_params.yaml" command="load" />
-
-        <remap from="cmd_vel" to="/synmech_mobot/cmd_vel"/>
-        <remap from="odom" to="/synmech_mobot/odom"/>
         
     </node>
 </launch>

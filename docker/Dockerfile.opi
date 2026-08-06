@@ -1,0 +1,43 @@
+# ============================================
+# Dockerfile cho Orange Pi PC+ — ROS Noetic
+# Build trên OPi (ARM): docker build -t synmech_ros .
+# ============================================
+FROM ros:noetic-ros-base
+
+# Tránh hỏi timezone khi cài package
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Cài các package ROS cần thiết
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # ROS packages
+    ros-noetic-robot-state-publisher \
+    ros-noetic-xacro \
+    ros-noetic-tf \
+    ros-noetic-nav-msgs \
+    ros-noetic-geometry-msgs \
+    # Python3 cho base_controller
+    python3-serial \
+    python3-pip \
+    # Tools
+    vim \
+    iputils-ping \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Tạo catkin workspace
+RUN mkdir -p /catkin_ws/src
+WORKDIR /catkin_ws
+
+# Copy source code vào container
+# (mount volume trong docker-compose thay vì COPY để dễ dev)
+
+# Setup entrypoint
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
+    echo "if [ -f /catkin_ws/devel/setup.bash ]; then source /catkin_ws/devel/setup.bash; fi" >> /root/.bashrc
+
+# Entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]

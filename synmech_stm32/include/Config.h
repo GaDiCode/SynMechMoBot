@@ -17,7 +17,7 @@
 
 #define ENCODER_RESOLUTION  11.0
 #define GEAR_RATIO          50.0
-#define WHEEL_RADIUS_M      0.033
+#define WHEEL_RADIUS_M      0.0215
 // MOTOR'S PINS
 #define MOTOR_LEFT_PWM   PA1
 #define MOTOR_LEFT_IN1   PA3

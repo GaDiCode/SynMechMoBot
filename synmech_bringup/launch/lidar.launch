@@ -1,0 +1,22 @@
+<launch>
+    <!-- ====== TEST LIDAR RIÊNG ======
+         Dùng để kiểm tra Lidar hoạt động trước khi chạy bringup tổng.
+         Cách dùng: roslaunch synmech_bringup lidar.launch
+    -->
+
+    <!-- Robot Description (cần cho TF laser_frame) -->
+    <param name="robot_description"
+           command="$(find xacro)/xacro '$(find synmech_description)/urdf/robot.urdf.xacro'"/>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher"
+          name="robot_state_publisher" output="screen"/>
+
+    <!-- RPLidar A1M8 -->
+    <node pkg="rplidar_ros" type="rplidarNode" name="rplidarNode" output="screen">
+        <param name="serial_port"      value="/dev/rplidar"/>
+        <param name="serial_baudrate"  value="115200"/>
+        <param name="frame_id"         value="laser_frame"/>
+        <param name="inverted"         value="false"/>
+        <param name="angle_compensate" value="true"/>
+    </node>
+</launch>

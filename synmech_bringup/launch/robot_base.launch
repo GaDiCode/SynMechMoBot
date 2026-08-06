@@ -1,0 +1,13 @@
+<launch>
+    <!-- ====== TEST MOTOR RIÊNG ======
+         Dùng để kiểm tra STM32 + Motor hoạt động trước khi chạy bringup tổng.
+         Cách dùng: roslaunch synmech_bringup robot_base.launch
+         Rồi mở terminal khác: rostopic pub /cmd_vel geometry_msgs/Twist ...
+    -->
+    <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">
+        <param name="port"        value="/dev/stm32"/>
+        <param name="baudrate"    value="115200"/>
+        <param name="vel_to_pwm"  value="200.0"/>
+        <param name="track_width" value="0.168"/>
+    </node>
+</launch>

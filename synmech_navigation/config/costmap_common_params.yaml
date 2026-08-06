@@ -1,5 +1,5 @@
 # ver 1 square robot:
-footprint: [[-0.10, -0.10], [-0.10, 0.10], [0.10, 0.10], [0.10, -0.10]]
+footprint: [[-0.075, -0.075], [-0.075, 0.075], [0.075, 0.075], [0.075, -0.075]]
 
 # ver2 circle robot will use:
 #robot_radius: 0.1

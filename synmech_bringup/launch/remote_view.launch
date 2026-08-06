@@ -1,0 +1,28 @@
+<launch>
+    <!-- ============================================
+         REMOTE VIEW — CHẠY TRÊN LAPTOP
+         Kết nối vào ROS Master trên Orange Pi để:
+         1. Xem dữ liệu Lidar, bản đồ, TF trên RViz
+         2. Điều khiển xe bằng bàn phím (teleop)
+
+         TRƯỚC KHI CHẠY, set 2 biến này trong terminal:
+           export ROS_MASTER_URI=http://192.168.0.99:11311
+           export ROS_IP=192.168.0.105
+         ============================================ -->
+
+    <arg name="rviz_config" default="$(find synmech_sim)/config/sim.rviz"/>
+
+    <!-- RViz — Hiển thị robot, Lidar, bản đồ -->
+    <node pkg="rviz" type="rviz" name="rviz"
+          args="-d $(arg rviz_config)" output="screen"/>
+
+    <!-- Teleop Keyboard — Lái xe từ xa bằng bàn phím
+         Mở trong terminal riêng (xterm) để nhận phím bấm -->
+    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"
+          name="teleop" output="screen"
+          launch-prefix="xterm -e">
+        <!-- Giảm tốc độ mặc định cho robot nhỏ -->
+        <param name="speed"      value="0.15"/>
+        <param name="turn"       value="0.5"/>
+    </node>
+</launch>

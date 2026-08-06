@@ -1,9 +1,37 @@
 <launch>
-    <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">
-        <param name="port" value="/dev/ttyUSB0" />
-        <param name="baudrate" value="115200" />
-        <param name="vel_to_pwm" value="200.0" />
-        <param name="track_width" value="0.16" />
+    <!-- ============================================
+         BRINGUP TỔNG — CHẠY TRÊN ORANGE PI (Docker)
+         Gom tất cả node cần thiết cho xe thật.
+         ============================================ -->
+
+    <!-- Robot Description (cho robot_state_publisher tạo TF tree) -->
+    <param name="robot_description"
+           command="$(find xacro)/xacro '$(find synmech_description)/urdf/robot.urdf.xacro'"/>
+
+    <!-- Robot State Publisher: phát TF tree từ URDF
+         base_footprint → base_link → wheels, laser_frame -->
+    <node pkg="robot_state_publisher" type="robot_state_publisher"
+          name="robot_state_publisher" output="screen">
+        <param name="publish_frequency" value="50.0"/>
     </node>
-    <!-- Các node Lidar, Camera hoặc robot_state_publisher sẽ viết tiếp ở đây -->
+
+    <!-- ====== LIDAR RPLidar A1M8 ====== -->
+    <node pkg="rplidar_ros" type="rplidarNode" name="rplidarNode" output="screen">
+        <param name="serial_port"      value="/dev/rplidar"/>
+        <param name="serial_baudrate"  value="115200"/>
+        <param name="frame_id"         value="laser_frame"/>
+        <param name="inverted"         value="false"/>
+        <param name="angle_compensate" value="true"/>
+    </node>
+
+    <!-- ====== BASE CONTROLLER (STM32 UART) ======
+         Bỏ comment khi cắm STM32 vào OPi.
+         Đổi port thành /dev/stm32 sau khi cài udev rule.
+    <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">
+        <param name="port"        value="/dev/stm32"/>
+        <param name="baudrate"    value="115200"/>
+        <param name="vel_to_pwm"  value="200.0"/>
+        <param name="track_width" value="0.168"/>
+    </node>
+    -->
 </launch>

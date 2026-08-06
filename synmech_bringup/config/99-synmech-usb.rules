@@ -1,0 +1,54 @@
+# ============================================
+# UDEV RULES — Gán tên cố định cho thiết bị USB
+# ============================================
+#
+# UDEV LÀ GÌ?
+# ------------
+# Khi bạn cắm USB (Lidar, STM32...) vào Linux, hệ thống tự gán tên
+# /dev/ttyUSB0, ttyUSB1... theo thứ tự cắm → mỗi lần cắm có thể đổi!
+#
+# Udev rule cho phép bạn đặt TÊN CỐ ĐỊNH dựa trên Vendor ID / Product ID
+# của thiết bị. Ví dụ:
+#   - Lidar RPLidar A1M8 (chip CP2102) luôn là /dev/rplidar
+#   - STM32 (chip USB-to-UART)         luôn là /dev/stm32
+#
+# CÁCH TÌM VENDOR ID / PRODUCT ID?
+# ---------------------------------
+# Cắm thiết bị vào, chạy:
+#   lsusb
+# Kết quả ví dụ:
+#   Bus 001 Device 004: ID 10c4:ea60 Silicon Labs CP210x (đây là RPLidar)
+#                           ^^^^:^^^^
+#                           idVendor:idProduct
+#
+# Hoặc chạy chi tiết hơn:
+#   udevadm info --name=/dev/ttyUSB0 --attribute-walk | grep -E "idVendor|idProduct"
+#
+# CÁCH CÀI ĐẶT?
+# ---------------
+# 1. Copy file này vào /etc/udev/rules.d/ trên Orange Pi:
+#      sudo cp 99-synmech-usb.rules /etc/udev/rules.d/
+#
+# 2. Reload udev:
+#      sudo udevadm control --reload-rules
+#      sudo udevadm trigger
+#
+# 3. Rút cắm lại USB → kiểm tra:
+#      ls -la /dev/rplidar
+#      ls -la /dev/stm32
+#
+# ============================================
+
+# RPLidar A1M8 (Silicon Labs CP2102)
+# Vendor ID: 10c4, Product ID: ea60
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="rplidar", MODE="0666"
+
+# STM32 Blue Pill (STMicroelectronics hoặc chip CH340/CH341)
+# *** CHƯA XÁC ĐỊNH — Cắm STM32 rồi chạy lsusb để tìm ID ***
+# Nếu dùng CH340: idVendor=1a86, idProduct=7523
+# Nếu dùng FTDI:  idVendor=0403, idProduct=6001
+# Nếu dùng CP2102: idVendor=10c4, idProduct=ea60 (trùng Lidar → phải phân biệt bằng serial)
+#
+# Uncomment 1 dòng phù hợp sau khi xác định:
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="stm32", MODE="0666"
+# SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="stm32", MODE="0666"

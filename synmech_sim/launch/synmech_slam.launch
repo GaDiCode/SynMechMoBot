@@ -9,8 +9,8 @@
         <param name="map_frame" value="map"/>
 
         <param name="map_update_interval" value="2.0"/>
-        <param name="linearUpdate" value="0.5"/>
-        <param name="angularUpdate" value="0.2"/>
+        <param name="linearUpdate" value="0.1"/>
+        <param name="angularUpdate" value="0.1"/>
         
         <param name="maxUrange" value="10.0"/>
         <param name="sigma" value="0.05"/>

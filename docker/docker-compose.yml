@@ -1,0 +1,58 @@
+# ============================================
+# Docker Compose — Chạy ROS Noetic trên Orange Pi PC+
+#
+# Cách dùng:
+#   cd synmech_mobot/docker
+#   docker-compose up           ← Chạy roscore + bringup
+#   docker-compose up roscore   ← Chỉ roscore
+#   docker-compose run shell    ← Mở terminal trong container
+# ============================================
+
+version: "3.8"
+
+x-common: &common
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.opi
+  network_mode: host
+  privileged: true
+  environment:
+    - ROS_MASTER_URI=http://192.168.0.99:11311
+    - ROS_IP=192.168.0.99
+  volumes:
+    # Mount source code → sửa code ngoài, container thấy ngay
+    - ../:/catkin_ws/src/synmech_mobot
+    # Mount rplidar_ros (nếu nằm cùng cấp src)
+    # - ../../rplidar_ros:/catkin_ws/src/rplidar_ros
+    # Mount USB devices
+    - /dev:/dev
+  restart: unless-stopped
+
+services:
+  # ====== ROSCORE ======
+  roscore:
+    <<: *common
+    container_name: synmech_roscore
+    command: roscore
+
+  # ====== BRINGUP (Lidar + RSP + base_controller) ======
+  bringup:
+    <<: *common
+    container_name: synmech_bringup
+    depends_on:
+      - roscore
+    command: >
+      bash -c "
+        sleep 3 &&
+        echo '[synmech] Launching bringup...' &&
+        roslaunch synmech_bringup bringup.launch
+      "
+
+  # ====== SHELL — Mở terminal để debug ======
+  shell:
+    <<: *common
+    container_name: synmech_shell
+    profiles: ["debug"]
+    command: bash
+    stdin_open: true
+    tty: true

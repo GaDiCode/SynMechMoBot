@@ -1,0 +1,168 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Plane Cell Count: 20
+      Cell Size: 0.5
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Visual Enabled: true
+      Alpha: 1
+      Collision Enabled: false
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+      Marker Scale: 0.3
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Update Interval: 0
+    - Class: rviz/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic: /scan
+      Queue Size: 10
+      Size (m): 0.03
+      Style: Points
+      Color Transformer: FlatColor
+      Color: 255; 0; 0
+      Decay Time: 0
+      Unreliable: false
+    - Class: rviz/Map
+      Name: Map
+      Enabled: true
+      Topic: /map
+      Alpha: 0.7
+      Color Scheme: map
+      Draw Behind: false
+      Update Topic: /map_updates
+    - Class: rviz/Map
+      Name: Global Costmap
+      Enabled: false
+      Topic: /move_base/global_costmap/costmap
+      Alpha: 0.5
+      Color Scheme: costmap
+      Draw Behind: true
+    - Class: rviz/Map
+      Name: Local Costmap
+      Enabled: false
+      Topic: /move_base/local_costmap/costmap
+      Alpha: 0.5
+      Color Scheme: costmap
+      Draw Behind: false
+    - Class: rviz/Odometry
+      Name: Odometry
+      Enabled: true
+      Topic: /odom
+      Keep: 100
+      Shape:
+        Alpha: 1
+        Axes Length: 0.1
+        Axes Radius: 0.01
+        Color: 255; 85; 0
+        Head Length: 0.06
+        Head Radius: 0.03
+        Shaft Length: 0.1
+        Shaft Radius: 0.01
+        Value: Arrow
+      Position Tolerance: 0.1
+      Angle Tolerance: 0.1
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+        Position:
+          Alpha: 0.3
+        Value: false
+    - Class: rviz/Path
+      Name: Global Plan
+      Enabled: true
+      Topic: /move_base/NavfnROS/plan
+      Color: 0; 255; 0
+      Alpha: 1
+      Buffer Length: 1
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Style: None
+    - Class: rviz/Path
+      Name: Local Plan
+      Enabled: true
+      Topic: /move_base/TrajectoryPlannerROS/local_plan
+      Color: 0; 85; 255
+      Alpha: 1
+      Buffer Length: 1
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Style: None
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 5
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.8
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 0.5
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 800
+  Width: 1200
+  X: 100
+  Y: 100
