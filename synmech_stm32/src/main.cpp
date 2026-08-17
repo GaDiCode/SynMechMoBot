@@ -3,9 +3,14 @@
 #include "MotorDriver.h"
 #include "SerialBridge.h"
 #include "ImuSensor.h"
+#include "Kinematics.h"
 
 #ifdef USE_ENCODER
     #include "Encoder.h"
+#endif
+
+#ifdef USE_PS2
+    #include "PS2X_lib.h"
 #endif
 
 MotorDriver motorLeft(MOTOR_LEFT_PWM, MOTOR_LEFT_IN1, MOTOR_LEFT_IN2);
@@ -17,6 +22,13 @@ ImuSensor mpu1;
 #ifdef USE_DUAL_IMU
     ImuSensor mpu2;
 #endif
+
+// Using MAX_LINEAR_VEL from Config (ensure we define it universally in Config if missing)
+#ifndef MAX_LINEAR_VEL
+#define MAX_LINEAR_VEL 0.22f
+#endif
+
+Kinematics kinematics(TRACK_WIDTH, MAX_LINEAR_VEL);
 
 #ifdef USE_ENCODER
     Encoder encLeft(ENCODER_RESOLUTION, GEAR_RATIO, WHEEL_RADIUS_M);
@@ -39,14 +51,23 @@ ImuSensor mpu1;
     }
 #endif
 
+#ifdef USE_PS2
+    PS2X ps2;
+#endif
+
+enum InputMode { MODE_SERIAL, MODE_PS2 };
+InputMode currentMode = MODE_SERIAL;
+
 int target_pwm_left = 0;
 int target_pwm_right = 0;
 unsigned long last_serial_send_time = 0;
+unsigned long last_imu_time = 0;
+unsigned long last_ps2_time = 0;
 
 void setup() {
     motorLeft.init();
     motorRight.init();
-    orangePiComms.init(115200);
+    orangePiComms.init(SERIAL_BAUD);
 
     mpu1.init(MPU1_ADDRESS, MPU1_SDA, MPU1_SCL);
 
@@ -63,30 +84,90 @@ void setup() {
         attachInterrupt(digitalPinToInterrupt(ENC_LEFT_A), ISR_LeftEncoder, RISING);
         attachInterrupt(digitalPinToInterrupt(ENC_RIGHT_A), ISR_RightEncoder, RISING);
     #endif
+
+    #ifdef USE_PS2
+        // Setup PS2 controller, disable pressures and rumble
+        int error = ps2.config_gamepad(PS2_CLK, PS2_CMD, PS2_ATT, PS2_DAT, false, false);
+        if (error == 0) {
+            currentMode = MODE_PS2;
+        }
+    #endif
 }
 
 void loop() {
-    mpu1.update();
-    float final_yaw = mpu1.getYaw();
+    unsigned long current_time = millis();
 
+    // 1. IMU Update (100Hz -> every 10ms)
+    if (current_time - last_imu_time >= 10) {
+        last_imu_time = current_time;
+        mpu1.update();
+        #ifdef USE_DUAL_IMU
+            mpu2.update();
+        #endif
+    }
+    
+    float final_yaw = mpu1.getYaw();
     #ifdef USE_DUAL_IMU
-        mpu2.update();
-        final_yaw = (mpu1.getYaw() + mpu2.getYaw()) / 2.0;
+        final_yaw = (mpu1.getYaw() + mpu2.getYaw()) / 2.0f;
     #endif
 
     #ifdef USE_ENCODER
-        // Bắt STM32 tự động tính toán vận tốc ra m/s
         encLeft.calculateVelocity();
         encRight.calculateVelocity();
     #endif
 
-    if (orangePiComms.readCommand(target_pwm_left, target_pwm_right)) {
+    // 2. Serial Commands (always active)
+    SerialBridge::CommandType cmd = orangePiComms.readCommandEx(target_pwm_left, target_pwm_right);
+    if (cmd == SerialBridge::CMD_MOTOR) {
+        currentMode = MODE_SERIAL;
         motorLeft.setSpeed(target_pwm_left);
         motorRight.setSpeed(target_pwm_right);
+    } else if (cmd == SerialBridge::CMD_CALIBRATE) {
+        mpu1.calibrateGyro(500);
+        #ifdef USE_DUAL_IMU
+            mpu2.calibrateGyro(500);
+        #endif
+        orangePiComms.sendAck("CALIBRATED");
+    } else if (cmd == SerialBridge::CMD_STOP) {
+        motorLeft.setSpeed(0);
+        motorRight.setSpeed(0);
+    } else if (cmd == SerialBridge::CMD_PS2) {
+        currentMode = MODE_PS2;
+    } else if (cmd == SerialBridge::CMD_SERIAL) {
+        currentMode = MODE_SERIAL;
     }
 
-    if (millis() - last_serial_send_time >= 50) {
-        last_serial_send_time = millis();
+    // 3. PS2 Controller Mode
+    #ifdef USE_PS2
+    if (currentMode == MODE_PS2) {
+        if (current_time - last_ps2_time >= (1000 / PS2_READ_HZ)) {
+            last_ps2_time = current_time;
+            ps2.read_gamepad(false, 0);
+
+            if (ps2.isEmergencyStop()) {
+                motorLeft.setSpeed(0);
+                motorRight.setSpeed(0);
+            } else {
+                float multiplier = ps2.getSpeedMultiplier();
+                float vx = ps2.getRobotLinearVel(PS2_MAX_LINEAR, PS2_DEAD_ZONE) * multiplier;
+                float wz = ps2.getRobotAngularVel(PS2_MAX_ANGULAR, PS2_DEAD_ZONE) * multiplier;
+
+                float vL = 0, vR = 0;
+                kinematics.inverseKinematics(vx, wz, vL, vR);
+
+                int pwmL = kinematics.velocityToPWM(vL);
+                int pwmR = kinematics.velocityToPWM(vR);
+
+                motorLeft.setSpeed(pwmL);
+                motorRight.setSpeed(pwmR);
+            }
+        }
+    }
+    #endif
+
+    // 4. Telemetry (50Hz)
+    if (current_time - last_serial_send_time >= (1000 / TELEMETRY_HZ)) {
+        last_serial_send_time = current_time;
 
         #ifdef USE_ENCODER
             SerialUART1.print("YAW:");
@@ -96,8 +177,7 @@ void loop() {
             SerialUART1.print(",V_RIGHT:");
             SerialUART1.println(encRight.getMeterSec());
         #else
-            // Nếu không có Encoder, dùng lại hàm gửi feedback cơ bản (Chỉ có góc YAW)
-            orangePiComms.sendFeedback(final_yaw);
+            orangePiComms.sendTelemetry(final_yaw);
         #endif
     }
 }

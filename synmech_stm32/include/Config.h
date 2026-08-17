@@ -1,24 +1,17 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// MPU1
-#define MPU1_ADDRESS 0x68
-#define MPU1_SDA     PB11
-#define MPU1_SCL     PB10
+// SERIAL COMMUNICATION
+#define SERIAL_BAUD  115200
+#define TELEMETRY_HZ 50
 
-#ifdef USE_DUAL_IMU
-    // MPU thứ 2 (Nếu cắm chung dây với MPU1 thì khai báo trùng chân, đổi địa chỉ thành 0x69)
-    // (Nếu cắm riêng rẽ sang bus khác thì khai báo chân khác, ví dụ PB7, PB6)
-    #define MPU2_ADDRESS 0x69
-    #define MPU2_SDA     PB11  // Đổi thành PB7 nếu cắm bus I2C1
-    #define MPU2_SCL     PB10  // Đổi thành PB6 nếu cắm bus I2C1
-#endif
+// MECHANICAL & KINEMATICS
+#define TRACK_WIDTH       0.168f   // meters (distance between wheels)
+#define WHEEL_RADIUS_M    0.0215f  // meters
+#define MAX_LINEAR_VEL    0.22f    // m/s max velocity for PWM scaling
+#define MAX_ANGULAR_VEL   1.5f     // rad/s max rotational velocity
 
-
-#define ENCODER_RESOLUTION  11.0
-#define GEAR_RATIO          50.0
-#define WHEEL_RADIUS_M      0.0215
-// MOTOR'S PINS
+// MOTOR'S PINS (TB6612FNG)
 #define MOTOR_LEFT_PWM   PA1
 #define MOTOR_LEFT_IN1   PA3
 #define MOTOR_LEFT_IN2   PA4
@@ -27,23 +20,44 @@
 #define MOTOR_RIGHT_IN2  PA6
 
 // ENCODER MODE
-// #define USE_ENCODER    // Comment dòng này lại nếu KHÔNG dùng Encoder
+// #define USE_ENCODER    // Comment out if NOT using Encoders
 #ifdef USE_ENCODER
-    // Chọn các chân có hỗ trợ Ngắt ngoài (EXTI)
+    #define ENCODER_RESOLUTION  11.0f
+    #define GEAR_RATIO          50.0f
+    
+    // Choose pins with EXTI support
     #define ENC_LEFT_A   PB4
     #define ENC_LEFT_B   PB5
     #define ENC_RIGHT_A  PB8
     #define ENC_RIGHT_B  PB9
 #endif
 
-// DUAL MPU6050
-// MPU1 - Default address: 0x68
+// IMU MPU6050
 #define MPU1_ADDRESS 0x68
+#define MPU1_SDA     PB11
+#define MPU1_SCL     PB10
 
+// #define USE_DUAL_IMU   // Comment out if NOT using Dual IMU
 #ifdef USE_DUAL_IMU
-    // MPU thứ 2: Cắm chung 2 dây I2C (PB10, PB11) cùng con MPU1.
-    // NHƯNG CHÚ Ý: Chân AD0 của MPU thứ 2 phải hàn vào 3.3V => Địa chỉ 0x69
+    // Second MPU6050 (AD0 to 3.3V -> 0x69)
     #define MPU2_ADDRESS 0x69
+    #define MPU2_SDA     PB11
+    #define MPU2_SCL     PB10
+#endif
+
+// PS2 WIRELESS CONTROLLER
+// #define USE_PS2    // Comment out if NOT using PS2
+#ifdef USE_PS2
+    #define PS2_DAT  PB15  // MISO
+    #define PS2_CMD  PB13  // MOSI
+    #define PS2_CLK  PB14  // SCK
+    #define PS2_ATT  PB12  // CS
+    
+    // Joystick tuning
+    #define PS2_DEAD_ZONE     30     // Raw joystick center ±30
+    #define PS2_MAX_LINEAR    MAX_LINEAR_VEL
+    #define PS2_MAX_ANGULAR   MAX_ANGULAR_VEL
+    #define PS2_READ_HZ       50
 #endif
 
 #endif

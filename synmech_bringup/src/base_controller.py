@@ -1,157 +1,226 @@
 #!/usr/bin/env python3
+"""
+ROS node for synmech_mobot base controller.
+Bridges ROS and STM32 via Serial.
+Computes odometry using IMU yaw (closed-loop) and commanded velocity (open-loop).
+"""
+
 import rospy
 import serial
-import math
 import threading
+import math
+import numpy as np
+import yaml
 import tf
-from geometry_msgs.msg import Twist, Quaternion
+import tf2_ros
+from geometry_msgs.msg import Twist, TransformStamped, Quaternion
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import JointState
+from std_msgs.msg import String
 
-class SynmechBaseController:
+class BaseController:
     def __init__(self):
-        rospy.init_node('synmech_base_controller', anonymous=False)
+        rospy.init_node('base_controller')
 
-        # 1. CẤU HÌNH THÔNG SỐ CƠ KHÍ & SERIAL
-        # Thay đổi cổng /dev/ttyUSB0 tùy thuộc vào cáp cắm thực tế
-        self.serial_port = rospy.get_param('~port', '/dev/ttyUSB0')
-        self.baud_rate = rospy.get_param('~baudrate', 115200)
-        
-        # Khoảng cách giữa 2 bánh xe (Track width) - Đơn vị: mét
-        self.L = rospy.get_param('~track_width', 0.168) 
-        
-        # Hệ số quy đổi (Mapping) từ m/s sang PWM (0-255). 
-        # Cần tinh chỉnh (Tune) con số này khi chạy thực tế ngoài đời.
-        self.VEL_TO_PWM_RATIO = rospy.get_param('~vel_to_pwm', 200.0) 
+        # ROS Parameters
+        self.port = rospy.get_param('~port', '/dev/stm32')
+        self.baudrate = rospy.get_param('~baudrate', 115200)
+        self.track_width = rospy.get_param('~track_width', 0.168)
+        self.wheel_radius = rospy.get_param('~wheel_radius', 0.0215)
+        self.calibration_file = rospy.get_param('~calibration_file', 'calibration.yaml')
+        self.input_mode = rospy.get_param('~input_mode', 'serial')
 
-        # 2. KHỞI TẠO BIẾN ODOMETRY
+        # State Variables
+        self.imu_yaw = 0.0
         self.x = 0.0
         self.y = 0.0
-        self.theta = 0.0
+        self.last_vx = 0.0
+        self.last_w = 0.0
         self.last_time = rospy.Time.now()
 
-        # 3. KẾT NỐI UART (Bắt lỗi chuẩn Python 3)
-        try:
-            self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.1)
-            rospy.loginfo(f"Đã kết nối UART thành công tới STM32 tại {self.serial_port}")
-        except serial.SerialException as e:
-            rospy.logerr(f"Lỗi cổng Serial: {e}")
-            rospy.signal_shutdown("Không tìm thấy mạch STM32")
+        # Calibration Data
+        self.pwm_points = []
+        self.vel_points = []
+        self.load_calibration()
 
-        # 4. ROS PUBLISHERS & SUBSCRIBERS
+        # Serial Connection
+        self.serial_lock = threading.Lock()
+        self.serial_conn = None
+        self.connect_serial()
+
+        if self.serial_conn:
+            self.set_input_mode(self.input_mode)
+
+        # Publishers & Subscribers
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
-        self.tf_broadcaster = tf.TransformBroadcaster()
+        self.joint_pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
         rospy.Subscriber('/cmd_vel', Twist, self.cmd_vel_callback)
 
-        # 5. MỞ LUỒNG (THREAD) RIÊNG ĐỂ ĐỌC SENSOR TỪ STM32
-        self.read_thread = threading.Thread(target=self.serial_read_loop)
-        self.read_thread.daemon = True
-        self.read_thread.start()
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster()
 
-    # ==========================================
-    # KHỐI 1: NHẬN LỆNH ROS -> TÍNH TOÁN -> GỬI XUỐNG STM32
-    # ==========================================
+        # Start Serial Reader Thread
+        self.running = True
+        self.reader_thread = threading.Thread(target=self.serial_reader_loop)
+        self.reader_thread.daemon = True
+        self.reader_thread.start()
+
+        # Main Control Loop
+        self.rate = rospy.Rate(50)  # 50 Hz
+        self.main_loop()
+
+    def load_calibration(self):
+        try:
+            with open(self.calibration_file, 'r') as f:
+                data = yaml.safe_load(f)
+                points = data.get('calibration_points', [])
+                if points:
+                    # Sort by velocity to ensure monotonic increasing for interp
+                    points.sort(key=lambda p: p[1])
+                    self.pwm_points = [float(p[0]) for p in points]
+                    self.vel_points = [float(p[1]) for p in points]
+                    rospy.loginfo(f"Loaded {len(points)} calibration points.")
+                else:
+                    rospy.logwarn("Calibration points missing in YAML.")
+        except Exception as e:
+            rospy.logerr(f"Failed to load calibration file: {e}")
+            self.pwm_points = [0, 255]
+            self.vel_points = [0.0, 0.5]
+
+    def connect_serial(self):
+        try:
+            self.serial_conn = serial.Serial(self.port, self.baudrate, timeout=1.0)
+            rospy.loginfo(f"Connected to STM32 on {self.port}")
+        except serial.SerialException as e:
+            rospy.logerr(f"Serial connection failed: {e}")
+            self.serial_conn = None
+
+    def set_input_mode(self, mode):
+        if mode == 'ps2':
+            self.send_serial("PS2\n")
+        else:
+            self.send_serial("SER\n")
+
+    def send_serial(self, msg):
+        with self.serial_lock:
+            if self.serial_conn and self.serial_conn.is_open:
+                try:
+                    self.serial_conn.write(msg.encode('utf-8'))
+                except serial.SerialException:
+                    rospy.logerr("Serial write failed. Connection lost.")
+                    self.serial_conn.close()
+
+    def vel_to_pwm(self, vel):
+        """Convert velocity to PWM using calibration table."""
+        if vel == 0:
+            return 0
+        direction = 1 if vel > 0 else -1
+        # Interp requires x to be increasing (we map vel -> pwm)
+        pwm = np.interp(abs(vel), self.vel_points, self.pwm_points)
+        return int(direction * min(255, max(0, pwm)))
+
     def cmd_vel_callback(self, msg):
-        v = msg.linear.x    # Vận tốc tịnh tiến (m/s)
-        w = msg.angular.z   # Vận tốc góc xoay (rad/s)
+        self.last_vx = msg.linear.x
+        self.last_w = msg.angular.z
 
-        # Động học ngược (Inverse Kinematics) cho xe vi sai
-        v_left = v - (w * self.L / 2.0)
-        v_right = v + (w * self.L / 2.0)
+        # Inverse Kinematics
+        vl = self.last_vx - (self.last_w * self.track_width / 2.0)
+        vr = self.last_vx + (self.last_w * self.track_width / 2.0)
 
-        # Mapping Open-loop: Chuyển m/s thành PWM (Do STM32 chưa chạy PID)
-        pwm_left = int(v_left * self.VEL_TO_PWM_RATIO)
-        pwm_right = int(v_right * self.VEL_TO_PWM_RATIO)
+        pwmL = self.vel_to_pwm(vl)
+        pwmR = self.vel_to_pwm(vr)
 
-        # Ép khung giới hạn [-255, 255] an toàn
-        pwm_left = max(min(pwm_left, 255), -255)
-        pwm_right = max(min(pwm_right, 255), -255)
+        self.send_serial(f"M,{pwmL},{pwmR}\n")
 
-        # Đóng gói thành chuỗi Bytes chuẩn Python 3 và gửi đi
-        # Định dạng gửi: "150,-100\n"
-        command_str = f"{pwm_left},{pwm_right}\n"
-        self.ser.write(command_str.encode('utf-8'))
-
-    # ==========================================
-    # KHỐI 2: ĐỌC STM32 -> TÍNH ODOMETRY -> BẮN LÊN ROS
-    # ==========================================
-    def serial_read_loop(self):
-        rate = rospy.Rate(50) # Chạy luồng đọc ở tần số cao
-        while not rospy.is_shutdown():
+    def serial_reader_loop(self):
+        while self.running and not rospy.is_shutdown():
+            if not self.serial_conn or not self.serial_conn.is_open:
+                rospy.sleep(1.0)
+                self.connect_serial()
+                continue
+            
             try:
-                if self.ser.in_waiting > 0:
-                    # Đọc và decode từ Bytes -> String
-                    raw_data = self.ser.readline().decode('utf-8').strip()
-                    self.parse_and_publish_odom(raw_data)
+                line = self.serial_conn.readline().decode('utf-8').strip()
+                if not line:
+                    continue
+                
+                parts = line.split(',')
+                if parts[0] == 'D' and len(parts) >= 2:
+                    yaw_deg = float(parts[1])
+                    self.imu_yaw = math.radians(yaw_deg)
+                elif parts[0] == 'A':
+                    rospy.loginfo("STM32: Calibration ACK received.")
+                elif parts[0] == 'E':
+                    rospy.logerr(f"STM32 Error: {line}")
             except Exception as e:
-                rospy.logwarn_throttle(1.0, f"Lỗi đọc UART: {e}")
-            rate.sleep()
+                pass
 
-    def parse_and_publish_odom(self, data_str):
-        # Kỳ vọng nhận được: "YAW:15.5,V_LEFT:0.2,V_RIGHT:0.2"
-        # Hoặc nếu không có encoder: "YAW:15.5"
-        
-        yaw_deg = 0.0
-        v_l = 0.0
-        v_r = 0.0
+    def main_loop(self):
+        while not rospy.is_shutdown():
+            current_time = rospy.Time.now()
+            dt = (current_time - self.last_time).to_sec()
+            self.last_time = current_time
 
-        parts = data_str.split(',')
-        for part in parts:
-            if part.startswith("YAW:"):
-                yaw_deg = float(part.split(':')[1])
-            elif part.startswith("V_LEFT:"):
-                v_l = float(part.split(':')[1])
-            elif part.startswith("V_RIGHT:"):
-                v_r = float(part.split(':')[1])
+            # Update Odometry
+            # Note: self.last_vx is open-loop commanded velocity
+            # self.imu_yaw is closed-loop from STM32
+            dx = self.last_vx * math.cos(self.imu_yaw) * dt
+            dy = self.last_vx * math.sin(self.imu_yaw) * dt
+            
+            self.x += dx
+            self.y += dy
 
-        # Tính toán Động học thuận (Forward Kinematics)
-        current_time = rospy.Time.now()
-        dt = (current_time - self.last_time).to_sec()
+            quat = tf.transformations.quaternion_from_euler(0, 0, self.imu_yaw)
 
-        # Vận tốc tuyến tính trung bình của tâm xe
-        v_robot = (v_l + v_r) / 2.0
-        
-        # Đổi độ sang Radian chuẩn của ROS
-        self.theta = math.radians(yaw_deg) 
+            # Publish TF
+            t = TransformStamped()
+            t.header.stamp = current_time
+            t.header.frame_id = "odom"
+            t.child_frame_id = "base_footprint"
+            t.transform.translation.x = self.x
+            t.transform.translation.y = self.y
+            t.transform.translation.z = 0.0
+            t.transform.rotation.x = quat[0]
+            t.transform.rotation.y = quat[1]
+            t.transform.rotation.z = quat[2]
+            t.transform.rotation.w = quat[3]
+            self.tf_broadcaster.sendTransform(t)
 
-        # Tích phân vị trí (x, y) trên bản đồ
-        delta_x = v_robot * math.cos(self.theta) * dt
-        delta_y = v_robot * math.sin(self.theta) * dt
+            # Publish Odometry
+            odom = Odometry()
+            odom.header.stamp = current_time
+            odom.header.frame_id = "odom"
+            odom.child_frame_id = "base_footprint"
+            odom.pose.pose.position.x = self.x
+            odom.pose.pose.position.y = self.y
+            odom.pose.pose.orientation = Quaternion(*quat)
+            odom.twist.twist.linear.x = self.last_vx
+            odom.twist.twist.angular.z = self.last_w
+            self.odom_pub.publish(odom)
 
-        self.x += delta_x
-        self.y += delta_y
-        self.last_time = current_time
+            # Publish Joint States
+            js = JointState()
+            js.header.stamp = current_time
+            js.name = ['left_wheel_base', 'right_wheel_base']
+            
+            # Simple approximation of wheel positions (open loop)
+            vl = self.last_vx - (self.last_w * self.track_width / 2.0)
+            vr = self.last_vx + (self.last_w * self.track_width / 2.0)
+            
+            # For simplicity, we just publish velocity, and 0 position
+            js.position = [0.0, 0.0] 
+            js.velocity = [vl / self.wheel_radius, vr / self.wheel_radius]
+            self.joint_pub.publish(js)
 
-        # Ép kiểu Quaternion (Toán học hình học không gian)
-        odom_quat = tf.transformations.quaternion_from_euler(0, 0, self.theta)
+            self.rate.sleep()
 
-        # 1. BẮN TF BẢN ĐỒ (odom -> base_footprint)
-        self.tf_broadcaster.sendTransform(
-            (self.x, self.y, 0.0),
-            odom_quat,
-            current_time,
-            "base_footprint",
-            "odom"
-        )
-
-        # 2. BẮN TOPIC /odom CHO NAVIGATION DÙNG
-        odom = Odometry()
-        odom.header.stamp = current_time
-        odom.header.frame_id = "odom"
-        odom.child_frame_id = "base_footprint"
-
-        odom.pose.pose.position.x = self.x
-        odom.pose.pose.position.y = self.y
-        odom.pose.pose.position.z = 0.0
-        odom.pose.pose.orientation = Quaternion(*odom_quat)
-
-        odom.twist.twist.linear.x = v_robot
-        odom.twist.twist.angular.z = (v_r - v_l) / self.L
-
-        self.odom_pub.publish(odom)
+    def stop(self):
+        self.running = False
+        self.send_serial("S\n")
+        if self.serial_conn:
+            self.serial_conn.close()
 
 if __name__ == '__main__':
     try:
-        controller = SynmechBaseController()
-        rospy.spin()
+        controller = BaseController()
     except rospy.ROSInterruptException:
         pass
