@@ -1,13 +1,12 @@
 # ============================================
-# Dockerfile cho Orange Pi PC+ — ROS Noetic
+# Dockerfile Orange Pi PC+:  ROS Noetic
 # Build trên OPi (ARM): docker build -t synmech_ros .
 # ============================================
 FROM ros:noetic-ros-base
 
-# Tránh hỏi timezone khi cài package
+# Skip timezone while installing package
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Cài các package ROS cần thiết
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # ROS packages
     ros-noetic-robot-state-publisher \
@@ -30,16 +29,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Tạo catkin workspace
+# Make catkin workspace
 RUN mkdir -p /catkin_ws/src
 WORKDIR /catkin_ws
 
-# Copy source code vào container
-# (mount volume trong docker-compose thay vì COPY để dễ dev)
+# Copy source code into container
+# (mount volume in docker-compose)
 
 # Setup entrypoint
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
-    echo "if [ -f /catkin_ws/devel/setup.bash ]; then source /catkin_ws/devel/setup.bash; fi" >> /root/.bashrc
+    echo "if [ -f /catkin_ws/devel/setup.bash ]; then source /catkin_ws/devel/setup.bash; fi" >> /root/.bashrc && \
+    echo "if [ -f /catkin_ws/src/synmech_mobot/network.env ]; then source /catkin_ws/src/synmech_mobot/network.env; export ROS_MASTER_URI=http://\${OPI_IP}:\${ROS_PORT}; export ROS_IP=\${LAPTOP_IP}; fi" >> /root/.bashrc
 
 # Entrypoint script
 COPY docker/entrypoint.sh /entrypoint.sh

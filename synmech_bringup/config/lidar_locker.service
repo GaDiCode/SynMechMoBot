@@ -1,0 +1,13 @@
+[Unit]
+Description=RPLidar A1 Motor Locker (Prevent Auto-Spin)
+After=multi-user.target
+
+[Service]
+Type=simple
+# This path is a placeholder and will be replaced dynamically by setup_opi.sh
+ExecStart=/usr/bin/python3 REPO_DIR_PLACEHOLDER/synmech_bringup/scripts/lidar_locker.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -5,9 +5,10 @@
          1. Xem dữ liệu Lidar, bản đồ, TF trên RViz
          2. Điều khiển xe bằng bàn phím (teleop)
 
-         TRƯỚC KHI CHẠY, set 2 biến này trong terminal:
-           export ROS_MASTER_URI=http://192.168.0.99:2710
-           export ROS_IP=192.168.0.105
+         TRƯỚC KHI CHẠY, đọc cấu hình mạng:
+           source ~/catkin_ws/src/synmech_mobot/network.env
+           export ROS_MASTER_URI=http://${OPI_IP}:${ROS_PORT}
+           export ROS_IP=${LAPTOP_IP}
          ============================================ -->
 
     <arg name="rviz_config" default="$(find synmech_sim)/config/sim.rviz"/>

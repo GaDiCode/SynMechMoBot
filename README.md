@@ -58,7 +58,7 @@ synmech_mobot/
 
 ```bash
 # SSH into Orange Pi
-ssh opi@192.168.0.99
+ssh huywros@<OPI_IP>
 
 # Clone and launch
 cd ~/catkin_ws/src/synmech_mobot/docker
@@ -68,12 +68,10 @@ docker compose up
 ### 2. Connect from Laptop
 
 ```bash
-# Set ROS network variables (add to ~/.bashrc)
-export ROS_MASTER_URI=http://192.168.0.99:2710
-export ROS_IP=192.168.0.105
-
-# Launch RViz + Teleop
-roslaunch synmech_bringup slam_view.launch
+source ~/catkin_ws/src/synmech_mobot/network.env
+export ROS_MASTER_URI=http://${OPI_IP}:${ROS_PORT}
+export ROS_IP=${LAPTOP_IP}
+roslaunch synmech_bringup remote_view.launch
 ```
 
 ### 3. Flash STM32 Firmware
