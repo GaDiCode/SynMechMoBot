@@ -65,6 +65,7 @@ unsigned long last_imu_time = 0;
 unsigned long last_ps2_time = 0;
 
 void setup() {
+    digitalWrite(STBY, 1);
     motorLeft.init();
     motorRight.init();
     orangePiComms.init(SERIAL_BAUD);

@@ -16,9 +16,6 @@ x-common: &common
   privileged: true
   env_file:
     - ../network.env
-  environment:
-    - ROS_MASTER_URI=http://${OPI_IP}:${ROS_PORT}
-    - ROS_IP=${LAPTOP_IP}
   volumes:
     # Mount source code
     - ../:/catkin_ws/src/synmech_mobot

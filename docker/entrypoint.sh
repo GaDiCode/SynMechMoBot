@@ -20,9 +20,9 @@ if [ -f /catkin_ws/src/synmech_mobot/network.env ]; then
     export $(grep -v '^#' /catkin_ws/src/synmech_mobot/network.env | xargs)
 fi
 
-# Set ROS network
-export ROS_MASTER_URI=${ROS_MASTER_URI:-http://${OPI_IP}:${ROS_PORT}}
-export ROS_IP=${ROS_IP:-${OPI_IP}}
+# Set ROS network explicitly from network.env variables
+export ROS_MASTER_URI=http://${OPI_IP}:${ROS_PORT}
+export ROS_IP=${OPI_IP}
 
 echo "============================================"
 echo " SynMech Robot — ROS Noetic (Docker)"

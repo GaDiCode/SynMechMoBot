@@ -12,24 +12,21 @@
         <!-- Map update interval -->
         <param name="map_update_interval" value="2.0"/>
 
-        <!-- Conditions for Gmapping to update:
-             The robot must move at least 0.1m OR rotate 0.1 rad
-             to trigger scan matching. Smaller values = more frequent updates -->
+        <!-- Conditions for Gmapping to forced update (m/rad) -->
         <param name="linearUpdate"   value="0.1"/>
         <param name="angularUpdate"  value="0.1"/>
 
         <!-- temporalUpdate: Forces an update every N seconds
              EVEN IF the robot hasn't moved according to odometry. 
-             Crucial for Phase 1 where fake_odom doesn't know when the robot is manually moved.
-             Value -1.0 = disabled (default). Set to 1.0 = update every 1 second.
-             Switch back to -1.0 once real odometry (Phase 2+) is available to save CPU -->
+             Value -1.0 = disabled (default) with real odom (save CPU)
+             Value 1.0 = update every 1 second -->
         <param name="temporalUpdate" value="1.0"/>
 
         <!-- Lidar scan range -->
         <param name="maxUrange" value="6.0"/>
         <param name="maxRange"  value="8.0"/>
 
-        <!-- Scan matching parameters (defaults are usually stable) -->
+        <!-- Scan matching parameters (defaults) -->
         <param name="sigma"       value="0.05"/>
         <param name="kernelSize"  value="1"/>
         <param name="lstep"       value="0.05"/>
@@ -40,8 +37,8 @@
         <param name="lskip"       value="0"/>
 
         <!-- minimumScore: Minimum score to accept a scan match.
-             Lower value (50) = more permissive, good for Phase 1 with fake odometry.
-             Increase to 200-400 with real odometry (Phase 2+) for a more accurate map -->
+             Lower value (50) = more permissive
+             Increase to 200-400 with real odometry for a more accurate map -->
         <param name="minimumScore" value="50"/>
 
         <!-- Particle filter parameters -->

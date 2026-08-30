@@ -20,11 +20,24 @@ if [ $? -eq 0 ]; then
     if [ $? -eq 0 ]; then
         echo "Sent file. Ready to press RESET button on STM32..."
         sleep 2
-        echo "Running flash command on Orange Pi..."
-        ssh -t ${OPI_USER}@${OPI_IP} 'hid-flash /tmp/firmware.bin'
+        echo "Running flash command on Orange Pi (Polling for 60s)..."
+        ssh -t ${OPI_USER}@${OPI_IP} '
+            echo "Press RESET button on STM32 now..."
+            for i in {1..60}; do
+                output=$(hid-flash /tmp/firmware.bin dummy 2>&1)
+                if [[ "$output" == *"Finish"* || "$output" == *"Success"* || "$output" == *"bytes written"* ]]; then
+                    echo "$output"
+                    echo "SUCCESS!"
+                    exit 0
+                fi
+                sleep 1
+            done
+            echo "Timeout (60s). Cannot find out BOOTLOADER."
+            exit 1
+        '
     else
         echo "Error: Cannnot send file to Orange Pi. Please check network/password."
     fi
 else
-    echo "Errỏ: Failed. Check code before rebuild again."
+    echo "Error: Failed. Check code before rebuild again."
 fi

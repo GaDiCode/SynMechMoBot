@@ -12,12 +12,13 @@
 #define MAX_ANGULAR_VEL   1.5f     // rad/s max rotational velocity
 
 // MOTOR'S PINS (TB6612FNG)
-#define MOTOR_LEFT_PWM   PA1
-#define MOTOR_LEFT_IN1   PA3
-#define MOTOR_LEFT_IN2   PA4
-#define MOTOR_RIGHT_PWM  PA2
-#define MOTOR_RIGHT_IN1  PA5
-#define MOTOR_RIGHT_IN2  PA6
+#define MOTOR_LEFT_PWM   PA15
+#define MOTOR_LEFT_IN1   PA9
+#define MOTOR_LEFT_IN2   PA10
+#define MOTOR_RIGHT_PWM  PA13
+#define MOTOR_RIGHT_IN1  PA14
+#define MOTOR_RIGHT_IN2  PA15
+#define STBY             PA8
 
 // ENCODER MODE
 // #define USE_ENCODER    // Comment out if NOT using Encoders
