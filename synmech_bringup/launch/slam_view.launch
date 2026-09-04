@@ -14,11 +14,18 @@
 
     <!-- Teleop Keyboard - Remote control via keyboard
          Opens in a separate terminal window (xterm) to capture keypresses -->
+     
+     <!--
+    <node pkg="synmech_bringup" type="teleop_hold.py"
+          name="teleop_hold" output="screen"
+          launch-prefix="xterm -e">
+     -->
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"
           name="teleop" output="screen"
           launch-prefix="xterm -e">
         <!-- Reduce default speed for safer mapping in small environments -->
         <param name="speed"      value="0.10"/>
         <param name="turn"       value="0.4"/>
+        <param name="timeout"    value="0.15"/>
     </node>
 </launch>

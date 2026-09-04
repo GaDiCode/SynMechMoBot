@@ -23,19 +23,21 @@
          Publishes TF odom->base_footprint + /joint_states to resolve TF tree errors.
          Integrates /cmd_vel to estimate position (dead reckoning).
          *** Remove/comment out this node when migrating to base_controller.py *** -->
+    <!--
     <node pkg="synmech_bringup" type="fake_odom.py" name="fake_odom" output="screen">
         <param name="track_width"  value="0.168"/>
         <param name="wheel_radius" value="0.0215"/>
     </node>
+    -->
 
     <!-- ====== BASE CONTROLLER ======
          Uncomment this node when the STM32 board is connected to the Orange Pi.
          Update the port to /dev/stm32 after configuring udev rules.
+    -->
     <node pkg="synmech_bringup" type="base_controller.py" name="base_controller" output="screen">
         <param name="port"        value="/dev/stm32"/>
         <param name="baudrate"    value="115200"/>
         <param name="vel_to_pwm"  value="200.0"/>
         <param name="track_width" value="0.168"/>
     </node>
-    -->
 </launch>

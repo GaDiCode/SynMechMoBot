@@ -1,12 +1,13 @@
 #include "SerialBridge.h"
 
-SerialBridge::SerialBridge(HardwareSerial* port) {
+SerialBridge::SerialBridge(Stream* port) {
     this->serial_port = port;
     this->input_buffer = "";
 }
 
 void SerialBridge::init(long baud_rate) {
-    serial_port->begin(baud_rate);
+    // Port should be initialized externally (e.g. Serial.begin(baud_rate))
+    this->input_buffer = "";
 }
 
 // Hàm đọc lệnh: Trả về true nếu đã nhận đủ 1 dòng lệnh hoàn chỉnh

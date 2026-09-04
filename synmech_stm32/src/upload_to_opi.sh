@@ -10,34 +10,34 @@ else
     exit 1
 fi
 
-echo "[INFO] Building firmware with PlatformIO..."
+echo "Building firmware with PlatformIO..."
 pio run
 
 if [ $? -eq 0 ]; then
-    echo "[INFO] Build successful. Transferring binary to target (${OPI_IP})..."
+    echo "Success! Sending file to Orange Pi (${OPI_IP})..."
     scp .pio/build/genericSTM32F103C8/firmware.bin ${OPI_USER}@${OPI_IP}:/tmp/
     
     if [ $? -eq 0 ]; then
-        echo "[INFO] Transfer complete. Initializing flash sequence..."
+        echo "Sent file. Ready to press RESET button on STM32..."
         sleep 2
-        echo "[INFO] Polling target for HID bootloader (60s timeout)..."
+        echo "Running flash command on Orange Pi (Polling for 60s)..."
         ssh -t ${OPI_USER}@${OPI_IP} '
-            echo "[ACTION REQUIRED] Press the RESET button on the STM32 board now..."
+            echo "Press RESET button on STM32 now..."
             for i in {1..60}; do
                 output=$(hid-flash /tmp/firmware.bin dummy 2>&1)
                 if [[ "$output" == *"Finish"* || "$output" == *"Success"* || "$output" == *"bytes written"* ]]; then
                     echo "$output"
-                    echo "[INFO] Firmware flash completed successfully."
+                    echo "SUCCESS!"
                     exit 0
                 fi
                 sleep 1
             done
-            echo "[ERROR] Timeout (60s). HID bootloader not detected."
+            echo "Timeout (60s). Cannot find out BOOTLOADER."
             exit 1
         '
     else
-        echo "[ERROR] File transfer failed. Verify network connection and credentials."
+        echo "Error: Cannnot send file to Orange Pi. Please check network/password."
     fi
 else
-    echo "[ERROR] Firmware build failed. Please check the compilation errors."
+    echo "Error: Failed. Check code before rebuild again."
 fi

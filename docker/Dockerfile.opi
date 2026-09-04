@@ -36,10 +36,12 @@ WORKDIR /catkin_ws
 # Copy source code into container
 # (mount volume in docker-compose)
 
-# Setup entrypoint
+# Setup .bashrc for interactive shells (docker exec, docker-compose run)
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
     echo "if [ -f /catkin_ws/devel/setup.bash ]; then source /catkin_ws/devel/setup.bash; fi" >> /root/.bashrc && \
-    echo "if [ -f /catkin_ws/src/synmech_mobot/network.env ]; then source /catkin_ws/src/synmech_mobot/network.env; export ROS_MASTER_URI=http://\${OPI_IP}:\${ROS_PORT}; export ROS_IP=\${LAPTOP_IP}; fi" >> /root/.bashrc
+    echo '# ROS network — sử dụng biến từ env_file (network.env)' >> /root/.bashrc && \
+    echo 'export ROS_MASTER_URI=${ROS_MASTER_URI:-http://${OPI_IP:-localhost}:${ROS_PORT:-11311}}' >> /root/.bashrc && \
+    echo 'export ROS_IP=${ROS_IP:-${OPI_IP:-127.0.0.1}}' >> /root/.bashrc
 
 # Entrypoint script
 COPY docker/entrypoint.sh /entrypoint.sh

@@ -19,11 +19,12 @@
 
     <!-- Teleop Keyboard — Lái xe từ xa bằng bàn phím
          Mở trong terminal riêng (xterm) để nhận phím bấm -->
-    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"
-          name="teleop" output="screen"
+    <node pkg="synmech_bringup" type="teleop_hold.py"
+          name="teleop_hold" output="screen"
           launch-prefix="xterm -e">
         <!-- Giảm tốc độ mặc định cho robot nhỏ -->
         <param name="speed"      value="0.15"/>
         <param name="turn"       value="0.5"/>
+        <param name="timeout"    value="0.15"/>
     </node>
 </launch>
